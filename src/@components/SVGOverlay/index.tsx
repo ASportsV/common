@@ -1,19 +1,19 @@
 import './style.scss'
 import React from 'react'
 
-import type { Ball, Frame, Player, Video } from '../../@types'
+import type { Ball, Frame, BasePlayer, BaseVideo } from '../../@types'
 
 export interface SVGLayerProps<GameID extends string, VideoID extends string, PlayerID extends number> {
   // width: number
   // height: number
-  currentVideo: Video<GameID, VideoID>
+  currentVideo: BaseVideo<GameID, VideoID>
   currentFrameData?: Frame<PlayerID>
   activeBBoxes?: Array<PlayerID | 'ball'>
 
   // animatedFrameIdx: number
   onContextMenu?: (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => void
   onClickBG?: () => void
-  onClickPlayer?: (player: Player<PlayerID>, idx: number) => void
+  onClickPlayer?: (player: BasePlayer<PlayerID>, idx: number) => void
   onClickBall?: (ball: Ball) => void
   onDBClick?: () => void
 }

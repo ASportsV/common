@@ -1,5 +1,5 @@
 import type { Layer } from "../@types/draw";
-import type { Player } from "../@types/data";
+import type { BasePlayer } from "../@types/data";
 import type { Point } from "../@types/basic";
 import { fadeOutFrame } from './frame'
 
@@ -29,7 +29,7 @@ const internalCtx = internalCanvas.getContext('2d')!
 function drawFullBrightPlayers<PlayerID extends number>(layer: Layer,
   frame: CanvasImageSource,
   mask: CanvasImageSource,
-  players: Player<PlayerID>[],
+  players: BasePlayer<PlayerID>[],
   glow: boolean = true
 ) {
   const { ctx } = layer

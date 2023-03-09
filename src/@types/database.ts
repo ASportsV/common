@@ -1,4 +1,4 @@
-import type { Player, Ball } from '../@types';
+import type { BasePlayer, Ball } from '../@types';
 
 export interface CacheFrameData<PlayerID extends number> {
     gameId: string
@@ -7,7 +7,7 @@ export interface CacheFrameData<PlayerID extends number> {
 
     mask?: Blob
     // default as string
-    players: Player<PlayerID>[]
+    players: BasePlayer<PlayerID>[]
     ball: Ball
     teamWithBall?: string
 }

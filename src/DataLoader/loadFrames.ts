@@ -1,7 +1,7 @@
 import type {
-  Player,
+  BasePlayer,
   Ball,
-  Video,
+  BaseVideo,
   CacheFrameData,
 } from '../@types';
 import { ArrayToDict } from "../@utils";
@@ -12,7 +12,7 @@ import { Database } from "./Database"
 const Loading: Partial<Record<string, boolean>> = {}
 
 // load data from indexedDB
-export async function loadFramesFromDBToMem<GameID extends string, VideoID extends string>(video: Video<GameID, VideoID>, db: Database): Promise<CacheFrameData[] | undefined> {
+export async function loadFramesFromDBToMem<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, db: Database): Promise<CacheFrameData<PlayerID>[] | undefined> {
   const { id: videoId, maxFrame, isTransit = false, startFame = 0 } = video
   if (Loading[videoId] || isTransit) return
   Loading[videoId] = true
@@ -22,7 +22,7 @@ export async function loadFramesFromDBToMem<GameID extends string, VideoID exten
     .map((_, frameIdx) => frameIdx)
     // filter the frames before the startFrame
     .filter((fIdx) => fIdx >= startFame)
-  const frames = Object.values(await loadAllFromDB<GameID, VideoID>(video, frameIdxs, db))
+  const frames = Object.values(await loadAllFromDB<GameID, VideoID, PlayerID>(video, frameIdxs, db))
   console.groupEnd()
 
   Loading[videoId] = false
@@ -30,7 +30,7 @@ export async function loadFramesFromDBToMem<GameID extends string, VideoID exten
   return frames
 }
 
-export async function loadAllFromDB<GameID extends string, VideoID extends string>(video: Video<GameID, VideoID>, frameIdxs: number[], db: Database) {
+export async function loadAllFromDB<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database) {
   const { gameId, id: videoId } = video
   const { version: vCache = -1 } = (await db.myTables.videoDataVersions
     .where(['gameId', 'videoId'])
@@ -38,7 +38,7 @@ export async function loadAllFromDB<GameID extends string, VideoID extends strin
     .toArray()
   )[0] ?? {}
 
-  let dbFrames: Record<number, CacheFrameData> = {}
+  let dbFrames: Record<number, CacheFrameData<PlayerID>> = {}
   if (video.version === vCache) {
     dbFrames = ArrayToDict(await db.myTables.frames //db.table('frames')
       .where(['gameId', 'videoId', 'idx'])
@@ -48,12 +48,12 @@ export async function loadAllFromDB<GameID extends string, VideoID extends strin
 
   if (Object.keys(dbFrames).length !== frameIdxs.length) {
     console.log('missing frames in db, load from the net')
-    return await loadRawFramesFromNet<GameID, VideoID>(video, frameIdxs, db)
+    return await loadRawFramesFromNet<GameID, VideoID, PlayerID>(video, frameIdxs, db)
   }
   return dbFrames
 }
 
-export async function loadRawFramesFromNet<GameID extends string, VideoID extends string>(video: Video<GameID, VideoID>, frameIdxs: number[], db: Database) {
+export async function loadRawFramesFromNet<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database) {
   const { gameId, id: videoId, width: W, height: H, version } = video
 
   console.debug(`Download ${videoId} from net ====>`)
@@ -89,11 +89,11 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
     return { mask: await canvas.convertToBlob(), frameIdx }
   })), 'frameIdx')
 
-  const frameData: Record<number, CacheFrameData> = {}
+  const frameData: Record<number, CacheFrameData<PlayerID>> = {}
   frameIdxs.forEach(frameIdx => {
 
     // convert player
-    const players: Player<number>[] = frame_data[frameIdx].players
+    const players: BasePlayer<number>[] = frame_data[frameIdx].players
       .map((p: any) => {
         return {
           ...p,
@@ -123,7 +123,7 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
     }
   })
   console.debug('merging...')
-  const frames: CacheFrameData[] = frameIdxs.map(frameIdx => ({ ...frameData[frameIdx], ...rawFrames[frameIdx] }))
+  const frames: CacheFrameData<PlayerID>[] = frameIdxs.map(frameIdx => ({ ...frameData[frameIdx], ...rawFrames[frameIdx] }))
 
   console.debug(`Save ${videoId} to db===>`)
   db.myTables.frames.bulkPut(Object.values(frames))

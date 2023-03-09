@@ -1,4 +1,4 @@
-import { Frame, Video } from '../@types'
+import { Frame, BaseVideo } from '../@types'
 
 import { DataLoader } from '../DataLoader'
 import { VideoPlayer } from './VideoPlayer'
@@ -39,11 +39,11 @@ export class VideoEnv<
     }
   }
 
-  isLoaded(video: Video<GameID, VideoID>) {
+  isLoaded(video: BaseVideo<GameID, VideoID>) {
     return this.dataLoader.isLoaded(video) && super.isLoaded(video)
   }
 
-  async loadVideo(video: Video<GameID, VideoID>, play = false) {
+  async loadVideo(video: BaseVideo<GameID, VideoID>, play = false) {
     // not load
     if (this.currentTrack?.id === video.id) return
     super.loadVideo(video, play)

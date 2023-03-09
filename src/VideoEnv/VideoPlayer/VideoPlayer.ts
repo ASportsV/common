@@ -1,4 +1,4 @@
-import type { Video } from "../../@types"
+import type { BaseVideo } from "../../@types"
 import { VideoLoader } from './VideoLoader'
 
 class VideoTrack<GameID extends string, VideoID extends string> {
@@ -7,7 +7,7 @@ class VideoTrack<GameID extends string, VideoID extends string> {
     return this.#videoMeta?.frameRate === 50 ? 0 : 1
   }
 
-  #videoMeta?: Video<GameID, VideoID>
+  #videoMeta?: BaseVideo<GameID, VideoID>
   #video?: HTMLVideoElement
   get video() { return this.#video }
   get id() { return this.#video?.id }
@@ -16,7 +16,7 @@ class VideoTrack<GameID extends string, VideoID extends string> {
 
   onPlay: EventListener | null = null
   onPause: EventListener | null = null
-  setVideo(video: Video<GameID, VideoID>, videoElm: HTMLVideoElement | undefined) {
+  setVideo(video: BaseVideo<GameID, VideoID>, videoElm: HTMLVideoElement | undefined) {
     this.#video = videoElm
     this.#video?.requestVideoFrameCallback(this.invokeFrameHandlers)
     this.#videoMeta = video
@@ -67,7 +67,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   protected _currentTrack?: HTMLVideoElement
   public get currentTrack() { return this._currentTrack }
   // video meta
-  #currentVideo: Video<GameID, VideoID> | null = null
+  #currentVideo: BaseVideo<GameID, VideoID> | null = null
   protected set currentVideo(v) { this.#currentVideo = v }
   get currentVideo() { return this.#currentVideo }
 
@@ -87,7 +87,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   onPause?: (videoId: VideoID) => void
   onLoad?: (videoId: VideoID, type: 'Video' | 'Data') => void
   onUnload?: (videoId: VideoID, type: 'Video' | 'Data') => void
-  public videos: Video<GameID, VideoID>[] = []
+  public videos: BaseVideo<GameID, VideoID>[] = []
 
   constructor() {
     // auto switch to the next clip
@@ -138,7 +138,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
       await this.videoSources.fetch(video)
     }
   }
-  isLoaded(video: Video<GameID, VideoID>) {
+  isLoaded(video: BaseVideo<GameID, VideoID>) {
     return this.videoSources.isLoaded(video)
   }
 
@@ -157,7 +157,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   }
 
   // video track control
-  async loadVideo(video: Video<GameID, VideoID>, play = false) {
+  async loadVideo(video: BaseVideo<GameID, VideoID>, play = false) {
     // not load
     if (this.currentTrack?.id === video.id) return
     this.currentVideo = video
@@ -178,7 +178,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
     this._currentTrack = trackToLoad.video
   }
 
-  async preloadToAnotherTrack(newVideo: Video<GameID, VideoID>, play: boolean) {
+  async preloadToAnotherTrack(newVideo: BaseVideo<GameID, VideoID>, play: boolean) {
     console.log('%cpreloadToSkip', 'background: #444; color: #bada55; padding: 2px; border-radius:2px', newVideo)
     await this.videoSources?.fetch(newVideo)
 
@@ -207,7 +207,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
     this.onPause?.(this.currentTrack?.id as VideoID)
   }
 
-  async seekTo(video: Video<GameID, VideoID>, frameIdx: number) {
+  async seekTo(video: BaseVideo<GameID, VideoID>, frameIdx: number) {
     await this.loadVideo(video)
 
     this.currentTrack!.currentTime = (frameIdx / video.frameRate) + 0.001

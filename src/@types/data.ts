@@ -2,7 +2,7 @@
 
 import { BBox, Point } from "./basic"
 
-export interface Video<GameID extends string, VideoID extends string> {
+export interface BaseVideo<GameID extends string, VideoID extends string> {
   gameId: GameID,
   id: VideoID,
   maxFrame: number,
@@ -18,7 +18,7 @@ export interface Video<GameID extends string, VideoID extends string> {
 export interface Frame<PlayerID extends number> {
   idx: number
   // players
-  players?: Player<PlayerID>[]
+  players?: BasePlayer<PlayerID>[]
   mask?: CanvasImageSource // mask for all players
   // ball
   ball?: Ball
@@ -33,7 +33,7 @@ export interface PlayerTrackingData extends Point { }
 /**
  * Segmentation data in frame
  */
-export interface Player<PlayerID extends number> {
+export interface BasePlayer<PlayerID extends number> {
   readonly id: PlayerID
   // 3D tracking data
   // "tracking": {"x": 35.47, "y": 24.69, "defending": 202691}

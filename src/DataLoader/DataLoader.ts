@@ -1,6 +1,6 @@
 import type {
   Frame,
-  Video,
+  BaseVideo,
   CacheFrameData
 } from "../@types"
 import { DEBUG } from '../@const';
@@ -19,9 +19,9 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
   onLoad?: (videoId: VideoID) => void
   onUnload?: (videoId: VideoID) => void
 
-  #getFrames: (video: Video<GameID, VideoID>) => Promise<CacheFrameData[] | undefined>
+  #getFrames: (video: BaseVideo<GameID, VideoID>) => Promise<CacheFrameData<PlayerID>[] | undefined>
   constructor(readonly worker: { new(): Worker } = MyWorker) {
-    this.#getFrames = wrapWorker<[Video<GameID, VideoID>], CacheFrameData[] | undefined>(worker, 'Frames')
+    this.#getFrames = wrapWorker<[BaseVideo<GameID, VideoID>], CacheFrameData<PlayerID>[] | undefined>(worker, 'Frames')
   }
 
   /**
@@ -36,7 +36,7 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
   /**
    * ----------------- Data Loading --------------------
    */
-  isLoaded(video: Video<GameID, VideoID>) {
+  isLoaded(video: BaseVideo<GameID, VideoID>) {
     return video.isTransit || video.id in this.memVideoData
   }
   getVideoData(videoId: VideoID) {
@@ -44,7 +44,7 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
   }
 
   #pre_load_batch_size = 50
-  async fetch(video: Video<GameID, VideoID>, shouldWait: boolean = false) {
+  async fetch(video: BaseVideo<GameID, VideoID>, shouldWait: boolean = false) {
 
     if (this.#Loading[video.id]) {
       // wait until anothe thread finish
@@ -95,7 +95,7 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
     this.#Loading[video.id] = false
   }
 
-  unloadFromMem(video?: Video<GameID, VideoID>) {
+  unloadFromMem(video?: BaseVideo<GameID, VideoID>) {
     if (video === undefined || video.isTransit) return
     delete this.memVideoData[video.id]
     this.onUnload?.(video.id)

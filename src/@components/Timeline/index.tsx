@@ -1,7 +1,7 @@
 import "./style.scss";
 import React from "react";
 
-import { Interval, Clip, Video } from '../../@types'
+import { Interval, Clip, BaseVideo } from '../../@types'
 import { intervalIdGen, localFIdxToGlobalFIdx } from '../../@utils'
 
 import { Interval as CInterval } from './Interval'
@@ -22,7 +22,7 @@ function hhmmss(secs: number) {
 interface BaseProps<GameID extends string, VideoID extends string> {
   mode?: 'S' | 'M' | 'L'
 
-  videos: Video<GameID, VideoID>[];
+  videos: BaseVideo<GameID, VideoID>[];
   currentVideoIdx: number;
   currentFrameIdx: number
 

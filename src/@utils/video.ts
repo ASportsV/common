@@ -1,4 +1,4 @@
-import { Video } from "../@types"
+import { BaseVideo } from "../@types"
 
 export async function getImg(src: string) {
   const img = new Image()
@@ -12,7 +12,7 @@ export async function getImg(src: string) {
   return img
 }
 
-export function globalFIdxToLocal<GameID extends string, VideoID extends string>(globalFrameIdx: number, videos: Video<GameID, VideoID>[]) {
+export function globalFIdxToLocal<GameID extends string, VideoID extends string>(globalFrameIdx: number, videos: BaseVideo<GameID, VideoID>[]) {
   let accFrame = 0
   let videoIdx = 0
   for (videoIdx = 0; videoIdx < videos.length; ++videoIdx) {
@@ -27,7 +27,7 @@ export function globalFIdxToLocal<GameID extends string, VideoID extends string>
   return { videoIdx, frameIdx: newCurFrameIdx }
 }
 
-export function localFIdxToGlobalFIdx<GameID extends string, VideoID extends string>(videoIdx: number, localFIdx: number, videos: Video<GameID, VideoID>[]) {
+export function localFIdxToGlobalFIdx<GameID extends string, VideoID extends string>(videoIdx: number, localFIdx: number, videos: BaseVideo<GameID, VideoID>[]) {
   let accFrameIdx = 0
   for (let i = 0; i < videoIdx; ++i)
     accFrameIdx += videos[i].maxFrame

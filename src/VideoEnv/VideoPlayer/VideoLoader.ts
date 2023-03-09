@@ -1,5 +1,5 @@
 import { DEBUG } from "../../@const"
-import type { Video } from "../../@types"
+import type { BaseVideo } from "../../@types"
 import { debugMem, waitUntil } from "../../@utils"
 
 
@@ -14,11 +14,11 @@ export class VideoLoader<GameID extends string, VideoID extends string> {
     return this.memVideos[videoId]
   }
 
-  isLoaded(video: Video<GameID, VideoID>) {
+  isLoaded(video: BaseVideo<GameID, VideoID>) {
     return video.id in this.memVideos
   }
 
-  async fetch(video: Video<GameID, VideoID>) {
+  async fetch(video: BaseVideo<GameID, VideoID>) {
 
     if (this.#Loading[video.id]) {
       // wait until anothe thread finish
