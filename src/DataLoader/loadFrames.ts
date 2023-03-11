@@ -55,7 +55,7 @@ export async function loadAllFromDB<GameID extends string, VideoID extends strin
 
 function myDecode(ori_str: string) {
   const isLeadingZero = ori_str[0] === '0'
-  ori_str = ori_str.slice(0)
+  ori_str = ori_str.slice(1)
 
   // Decode the unsigned leb128 encoded bytearray
   let rles = []
