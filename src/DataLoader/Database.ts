@@ -2,12 +2,12 @@
 import Dexie from 'dexie';
 import { CacheFrameData, VideoDataVersion } from '../@types'
 
-interface BaseTables {
-  frames: CacheFrameData,
+interface BaseTables<PID extends number> {
+  frames: CacheFrameData<PID>,
   videoDataVersions: VideoDataVersion
 }
 
-export class Database<T extends Record<string, any> = {}, K = T & BaseTables> extends Dexie {
+export class Database<PID extends number, T extends Record<string, any> = {}, K = T & BaseTables<PID>> extends Dexie {
   // meta
   public readonly myTables: { [k in keyof K]: Dexie.Table<K[k]> }
 

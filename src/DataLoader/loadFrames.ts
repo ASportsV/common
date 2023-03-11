@@ -12,7 +12,7 @@ import { Database } from "./Database"
 const Loading: Partial<Record<string, boolean>> = {}
 
 // load data from indexedDB
-export async function loadFramesFromDBToMem<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, db: Database): Promise<CacheFrameData<PlayerID>[] | undefined> {
+export async function loadFramesFromDBToMem<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, db: Database<PlayerID>): Promise<CacheFrameData<PlayerID>[] | undefined> {
   const { id: videoId, maxFrame, isTransit = false, startFame = 0 } = video
   if (Loading[videoId] || isTransit) return
   Loading[videoId] = true
@@ -30,7 +30,7 @@ export async function loadFramesFromDBToMem<GameID extends string, VideoID exten
   return frames
 }
 
-export async function loadAllFromDB<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database) {
+export async function loadAllFromDB<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database<PlayerID>) {
   const { gameId, id: videoId } = video
   const { version: vCache = -1 } = (await db.myTables.videoDataVersions
     .where(['gameId', 'videoId'])
@@ -53,22 +53,79 @@ export async function loadAllFromDB<GameID extends string, VideoID extends strin
   return dbFrames
 }
 
-export async function loadRawFramesFromNet<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database) {
+function myDecode(ori_str: string) {
+  const isLeadingZero = ori_str[0] === '0'
+  ori_str = ori_str.slice(0)
+
+  // Decode the unsigned leb128 encoded bytearray
+  let rles = []
+  let idx = 0, cnt = 0, rle = 0
+  let more = true
+  //console.log('ori_str: ', ori_str)
+  for (let i = 0; i < ori_str.length; i++) {
+    let byte = ori_str[i].charCodeAt(0)
+    //console.log('byte: ', byte)
+    byte = byte - 48
+    more = ((byte & 0x20) === 32)
+    byte = byte & 0x1f
+    byte = byte << (cnt * 5)
+    rle = rle + byte
+    if (more) {
+      cnt += 1
+    } else {
+      rles.push(rle)
+      idx += 1
+      cnt = 0
+      rle = 0
+    }
+  }
+
+  return isLeadingZero ? {
+    lz: rles[0], chunk: rles.slice(1)
+  } : {
+    lz: 0, chunk: rles
+  }
+
+}
+
+const KEY_POINT_LIST = [
+  'nose',
+  'left_eye',
+  'right_eye',
+  'left_ear',
+  'right_ear',
+  'left_shoulder',
+  'right_shoulder',
+  'left_elbow',
+  'right_elbow',
+  'left_wrist',
+  'right_wrist',
+  'left_hip',
+  'right_hip',
+  'left_knee',
+  'right_knee',
+  'left_ankle',
+  'right_ankle'
+]
+
+export async function loadRawFramesFromNet<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, frameIdxs: number[], db: Database<PlayerID>) {
   const { gameId, id: videoId, width: W, height: H, version } = video
 
   console.debug(`Download ${videoId} from net ====>`)
-  const frame_data = await fetch(`/assets/${gameId}/${videoId}/${videoId}-frame_data.json`).then(d => d.json())
+  // const frame_data = await fetch(`/assets/${gameId}/${videoId}/${videoId}-frame_data.json`).then(d => d.json())
+  const frame_data = await fetch(`/assets/${gameId}/${videoId}/${videoId}-data.json`).then(d => d.json())
   console.debug(`Done download ${videoId}<====`)
 
   const canvas = new OffscreenCanvas(W, H)
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
   const rawFrames = ArrayToDict(await Promise.all(frameIdxs.map(async (frameIdx) => {
-    const { seg } = frame_data[frameIdx]
+    const { seg: raw_seg } = frame_data[frameIdx]
 
     ctx.clearRect(0, 0, W, H)
     const imgData = ctx.getImageData(0, 0, W, H)
     const buf32 = new Uint32Array(imgData.data.buffer);
 
+    const seg = myDecode(raw_seg)
     let startPad = seg.lz
     for (let i = 0, len = seg.chunk.length; i < len; ++i) {
       if (i % 2 === 0) {
@@ -93,13 +150,13 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
   frameIdxs.forEach(frameIdx => {
 
     // convert player
-    const players: BasePlayer<number>[] = frame_data[frameIdx].players
+    const players: BasePlayer<number>[] = (frame_data[frameIdx].players ?? [])
       .map((p: any) => {
         return {
           ...p,
           bbox: { x: p.bbox[0], y: p.bbox[1], w: p.bbox[2], h: p.bbox[3] },
-          keypoints: p.keypoints.reduce((o: any, k: any) => {
-            o[k[0]] = { x: k[1], y: k[2] }
+          keypoints: p.keypoints.reduce((o: any, k: any, idx: number) => {
+            o[KEY_POINT_LIST[idx]] = { x: k[0], y: k[1] }
             return o
           }, {} as any)
         }
@@ -116,6 +173,7 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
 
     frameData[frameIdx] = {
       ...frame_data[frameIdx],
+      idx: +frameIdx,
       gameId,
       videoId,
       ball,
