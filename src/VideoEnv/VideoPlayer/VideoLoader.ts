@@ -30,7 +30,7 @@ export class VideoLoader<GameID extends string, VideoID extends string> {
     if (!this.isLoaded(video)) {
       console.debug('VideoLoader.preLoadToMem', video)
       const nextVideo = document.createElement('video')
-      nextVideo.src = `/assets/${video.gameId}/${video.id}/${video.id}.mp4`
+      nextVideo.src = `${process.env.PUBLIC_URL}/assets/${video.gameId}/${video.id}/${video.id}.mp4`
       nextVideo.id = video.id
       nextVideo.load()
       await new Promise(resolve => {

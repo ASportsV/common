@@ -113,8 +113,7 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
   const { gameId, id: videoId, width: W, height: H, version } = video
 
   console.debug(`Download ${videoId} from net ====>`)
-  // const frame_data = await fetch(`/assets/${gameId}/${videoId}/${videoId}-frame_data.json`).then(d => d.json())
-  const frame_data = await fetch(`/assets/${gameId}/${videoId}/${videoId}-data.json`).then(d => d.json())
+  const frame_data = await fetch(`${process.env.PUBLIC_URL}/assets/${gameId}/${videoId}/${videoId}-data.json`).then(d => d.json())
   console.debug(`Done download ${videoId}<====`)
 
   const canvas = new OffscreenCanvas(W, H)
