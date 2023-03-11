@@ -10,7 +10,8 @@ export interface BaseVideo<GameID extends string, VideoID extends string> {
   width: number,
   height: number
   isTransit: boolean,
-  loaded: boolean,
+  loadedData: number,
+  loadedVideo: number,
   frameRate: number,
   version: number
 }

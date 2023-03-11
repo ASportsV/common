@@ -24,8 +24,8 @@ export class VideoEnv<
     super()
     // this.dataLoader = new DataLoader(postProcessingData)
     // combine event
-    this.dataLoader.onLoad = (videoId: VideoID) => {
-      this.onLoad?.(videoId, 'Data')
+    this.dataLoader.onLoad = (videoId: VideoID, progres?: number) => {
+      this.onLoad?.(videoId, 'Data', progres)
     }
     this.dataLoader.onUnload = (videoId: VideoID) => {
       this.onUnload?.(videoId, 'Data')

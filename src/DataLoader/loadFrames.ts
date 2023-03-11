@@ -120,7 +120,8 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
   const rawFrames = ArrayToDict(await Promise.all(frameIdxs.map(async (frameIdx) => {
     const { seg: raw_seg } = frame_data[frameIdx]
-
+    // @ToDo, hardcode as 0.6
+    postMessage(['Progress', videoId, 0.6 * frameIdx / frameIdxs.length])
     ctx.clearRect(0, 0, W, H)
     const imgData = ctx.getImageData(0, 0, W, H)
     const buf32 = new Uint32Array(imgData.data.buffer);

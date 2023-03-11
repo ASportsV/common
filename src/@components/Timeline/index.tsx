@@ -365,7 +365,7 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
 
   render() {
     const { currentFrameIdx, videos } = this.props;
-    const { imgWidth, maxTime, numberOfImg, globalMaxFrames: maxFrame, intervalSelectorHeight, globalCurFrameIdx, containerHeight } = this
+    const { maxTime, globalMaxFrames: maxFrame, intervalSelectorHeight, globalCurFrameIdx, containerHeight } = this
 
     const currentTime = currentFrameIdx / (videos[0]?.frameRate ?? 30)
 
@@ -393,7 +393,7 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
                 width: `${v.maxFrame * this.trackWidthFactor}px`,
                 height: intervalSelectorHeight,
                 backgroundColor: v.isTransit ? '#515151' : 'rgb(116 99 57)',
-                opacity: v.loaded ? 1 : 0.5
+                opacity: (v.loadedData && v.loadedVideo) ? 1 : 0.5
               }}>
               <span className="video-name">{v.id}</span>
               {/* {this.renderIndicator()} */}

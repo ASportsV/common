@@ -85,7 +85,7 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   // event handlers
   onPlay?: (videoId: VideoID) => void
   onPause?: (videoId: VideoID) => void
-  onLoad?: (videoId: VideoID, type: 'Video' | 'Data') => void
+  onLoad?: (videoId: VideoID, type: 'Video' | 'Data', progress?: number) => void
   onUnload?: (videoId: VideoID, type: 'Video' | 'Data') => void
   public videos: BaseVideo<GameID, VideoID>[] = []
 

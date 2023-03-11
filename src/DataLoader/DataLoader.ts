@@ -16,12 +16,17 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
   // video data per frame
   memVideoData: Partial<Record<VideoID, Record<number, Frame<PlayerID>>>> = {}
 
-  onLoad?: (videoId: VideoID) => void
+  onLoad?: (videoId: VideoID, progress?: number) => void
   onUnload?: (videoId: VideoID) => void
 
   #getFrames: (video: BaseVideo<GameID, VideoID>) => Promise<CacheFrameData<PlayerID>[] | undefined>
   constructor(readonly worker: { new(): Worker } = MyWorker) {
-    this.#getFrames = wrapWorker<[BaseVideo<GameID, VideoID>], CacheFrameData<PlayerID>[] | undefined>(worker, 'Frames')
+    this.#getFrames = wrapWorker<[BaseVideo<GameID, VideoID>], CacheFrameData<PlayerID>[] | undefined>(worker, 'Frames', (d) => {
+      if (d[0] === 'Progress') {
+        const [_, vId, progress] = d
+        this.onLoad?.(vId, progress)
+      }
+    })
   }
 
   /**
@@ -62,6 +67,8 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
         this.#Loading[video.id] = false
         return
       }
+      const progressOffset = 0.6
+      this.onLoad?.(video.id, progressOffset)
 
       // step2, process to mem
       console.log(`%cMain thread processing ${video.id} to mem =====>`, 'color:#f5f5f5;background: #00695c; padding: 2px; border-radius:2px')
@@ -77,6 +84,7 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
             return { ...frame, mask } as any as Frame<PlayerID>
           })))
         ]
+        this.onLoad?.(video.id, progressOffset + (0.95 - progressOffset) * i / Object.keys(frames).length)
 
         if (shouldWait) {
           await wait(30)
@@ -87,7 +95,7 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
       console.debug(`<=====${video.id} Done!`, framesToSave[0])
       // Step3. save to mem
       this.memVideoData[video.id] = ArrayToDict(framesToSave, 'idx')
-      this.onLoad?.(video.id)
+      this.onLoad?.(video.id, 1)
       DEBUG.DEBUG_MEM && debugMem()
 
       console.log(`%cMain thread done processing ${video.id} to mem<======`, 'color:#f5f5f5;background: #00695c; padding: 2px; border-radius:2px')
