@@ -50,7 +50,7 @@ export class SVGLayer<GameID extends string, VideoID extends string, PlayerID ex
     >
       <defs>
         <filter x="0" y="0" width="1" height="1" id="solid">
-          <feFlood flood-color="yellow" result="bg" />
+          <feFlood floodColor="yellow" result="bg" />
           <feMerge>
             <feMergeNode in="bg" />
             <feMergeNode in="SourceGraphic" />
