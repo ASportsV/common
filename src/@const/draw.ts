@@ -6,7 +6,7 @@ export const COLORS = {
     defense_bg_fill: `rgba(255, 255, 255, 0.15)`,
     defense_fg_fill: `#f5f5f5`,
     player_name: '#f5f5f5',
-    BG_MASK_ALPHA: 0.3,
+    BG_MASK_ALPHA: 0.25,
     FG_MASK_ALPHA: 0.2,
     off_df_link: '255, 255, 255',
     star_name: 'rgb(255, 243, 194)',
