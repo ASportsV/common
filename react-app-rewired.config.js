@@ -54,7 +54,7 @@ module.exports = {
     });
 
     // common
-    const commonDir = path.resolve(__dirname, 'common/src')
+    const commonDir = path.resolve(__dirname, 'src')
     const include = getBabelLoader(config).include
     getBabelLoader(config).include = (Array.isArray(include) ? include : [include]).concat([
       commonDir
