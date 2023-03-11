@@ -59,7 +59,8 @@ function myDecode(ori_str: string) {
 
   // Decode the unsigned leb128 encoded bytearray
   let rles = []
-  let idx = 0, cnt = 0, rle = 0
+  // let idx = 0, 
+  let cnt = 0, rle = 0
   let more = true
   //console.log('ori_str: ', ori_str)
   for (let i = 0; i < ori_str.length; i++) {
@@ -74,7 +75,7 @@ function myDecode(ori_str: string) {
       cnt += 1
     } else {
       rles.push(rle)
-      idx += 1
+      // idx += 1
       cnt = 0
       rle = 0
     }
@@ -189,169 +190,3 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
   console.debug(`Done save ${videoId} to db<====`)
   return frames
 }
-
-
-// export async function loadFramesFromDBToMem(video: Video, db: Database): Promise<Array<CacheFrame & CacheFrameData> | undefined> {
-//   const { gameId, id: videoId, maxFrame, isTransit = false, startFame = 0 } = video
-//   if (Loading[videoId] || isTransit) return
-//   Loading[videoId] = true
-
-//   console.groupCollapsed(`%cWorker load ${videoId} ====>`, 'background: #222; color: #bada55')
-//   const frameIdxs = Array(maxFrame).fill(0)
-//     .map((_, frameIdx) => frameIdx)
-//     // filter the frames before the startFrame
-//     .filter((fIdx) => fIdx >= startFame)
-
-//   // load raw frame from the db
-//   const rawFrames = await loadRawFrameFromDB(video, frameIdxs, db)
-//   // load data from the db
-//   const frameData = await loadStatDataFromDB(video, frameIdxs, db)
-
-//   console.log('merging...')
-//   const frames: CacheFrameData[] = frameIdxs.map(frameIdx => ({ ...frameData[frameIdx], ...rawFrames[frameIdx] }))
-//   console.groupEnd()
-
-//   Loading[videoId] = false
-//   console.debug(`%cWorker Done loadFramesFromDBToMem! ${frames.length} idx len: ${frameIdxs.length} <=========\n`, 'background: #222; color: #bada55')
-//   return frames
-// }
-
-// export async function loadRawFrameFromDB(video: Video, frameIdxs: number[], db: Database) {
-//   const { gameId, id: videoId } = video
-//   console.debug('load frames from db')
-//   const dbFrames: Record<number, CacheFrame> = ArrayToDict(await db.myTables.frames //db.table('frames')
-//     .where(['gameId', 'videoId', 'idx'])
-//     .anyOf(frameIdxs.map(idx => [gameId, videoId, idx]))
-//     .toArray(), 'idx')
-
-//   if (Object.keys(dbFrames).length !== frameIdxs.length) {
-//     console.log('missing frames in db')
-//     return await loadRawFramesFromNet(video, frameIdxs, db)
-//   }
-//   return dbFrames
-// }
-
-// export async function loadRawFramesFromNet({ gameId, id: videoId }: Video, frameIdxs: number[], db: Database) {
-//   console.debug(`Download ${videoId} from net ====>`)
-//   const dir = `/assets/${gameId}/${videoId}/`
-
-//   let blobFrames: Array<{ mask?: Blob, frameIdx: number }> = []
-//   const batch_size = 100
-//   for (let i = 0; i < frameIdxs.length; i += batch_size) {
-//     const itemsForBatch = frameIdxs.slice(i, i + batch_size)
-//     console.log(i)
-//     blobFrames = [
-//       ...blobFrames,
-//       ...(await Promise.all(itemsForBatch.map(async (frameIdx, idx) => {
-//         const mask = await fetch(`${dir}/semseg/${frameIdx}.png`)
-//           .then(res => res.blob())
-//         return { mask, frameIdx }
-//       })))
-//     ]
-//   }
-//   console.log(`Done download ${videoId}<====`)
-
-//   console.log(`Save ${videoId} to db===>`)
-//   const frames: Record<number, CacheFrame> = {}
-//   await Promise.all(blobFrames.map(async ({ mask, frameIdx }) => {
-//     db.myTables.frames
-//       .put({
-//         gameId,
-//         idx: frameIdx,
-//         videoId: videoId,
-//         mask
-//       })
-
-//     frames[frameIdx] = { idx: frameIdx, videoId, gameId }
-//     if (mask !== undefined) {
-//       frames[frameIdx].mask = mask
-//     }
-//   }))
-//   console.log(`Done save ${videoId} to db<====`)
-//   return frames
-// }
-
-// export async function loadStatDataFromDB(video: Video, frameIdxs: number[], db: Database) {
-//   const { gameId, id: videoId } = video
-//   // compatable for history version
-//   console.log('load data from db!')
-//   const dir = `/assets/${gameId}/${videoId}/`
-
-//   // check version
-//   // get the version from the net
-//   const { version: vNet } = await fetch(`${dir}/${videoId}-version.json`).then(res => res.json())
-//   // local version
-//   const { version: vCache = -1 } = (await db.myTables.videoDataVersions
-//     .where(['gameId', 'videoId'])
-//     .equals([gameId, videoId])
-//     .toArray()
-//   )[0] ?? {}
-
-//   let dbFrameDatas: Record<number, CacheFrameData> = {}
-//   // if version match, fetch from DB
-//   if (vNet === vCache) {
-//     dbFrameDatas = ArrayToDict(await db.myTables.frameDatas.where(['gameId', 'videoId', 'idx'])
-//       .anyOf(frameIdxs.map(idx => [gameId, videoId, idx]))
-//       .toArray(), 'idx')
-//   }
-
-//   if (Object.keys(dbFrameDatas).length !== frameIdxs.length) {
-//     console.log('missing data in db')
-//     dbFrameDatas = await loadStatDataFromNet(video, frameIdxs, vNet, db)
-//   }
-
-//   return dbFrameDatas
-// }
-
-// export async function loadStatDataFromNet({ gameId, id: videoId }: Video, frameIdxs: number[], version: number, db: Database) {
-//   console.log('load data from net')
-//   const dir = `/assets/${gameId}/${videoId}/`
-
-//   const bboxes_by_frame = await fetch(`${dir}/${videoId}-frame_data.json`).then(r => r.json())
-//   const meta = await fetch(`${process.env.PUBLIC_URL}/meta.json`).then(r => r.json())
-
-//   // 
-//   const frames: Record<number, CacheFrameData> = {}
-
-//   // convert format
-//   frameIdxs.forEach(frameIdx => {
-//     if(!(frameIdx in bboxes_by_frame)) return
-
-//     // convert player
-//       const players: Player[] = bboxes_by_frame[frameIdx].players
-//         .map((p: any) => {
-//           return {
-//             ...p,
-//             bbox: { x: p.bbox[0], y: p.bbox[1], w: p.bbox[2], h: p.bbox[3] },
-//             keypoints: p.keypoints.reduce((o: any, k: any) => {
-//               o[k[0]] = { x: k[1], y: k[2] }
-//               return o
-//             }, {} as any)
-//           }
-//         })
-
-//       // convert ball
-//       const oBall = bboxes_by_frame[frameIdx].ball
-//       const ball: Ball | null = oBall ? {
-//         // @ts-ignore, this is a dirty hack, since typescript does not allow override types, so I have to remove the `player` property from the type definition of Ball, and manually specify it in the app's @type definition
-//         playerId: oBall[0],
-//         tracking: { x: oBall[1], y: oBall[2], h: oBall[3] },
-//         screenPos: { x: oBall[4], y: oBall[5] }
-//       } : null
-
-//       frames[frameIdx] = {
-//         ...bboxes_by_frame[frameIdx],
-//         gameId,
-//         videoId,
-//         ball,
-//         players,
-//       }
-//   })
-
-//   db.myTables.frameDatas
-//     .bulkPut(Object.values(frames))
-//   db.myTables.videoDataVersions
-//     .put({ gameId, videoId, version })
-
-//   return frames
-// }
