@@ -393,7 +393,7 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
                 width: `${v.maxFrame * this.trackWidthFactor}px`,
                 height: intervalSelectorHeight,
                 backgroundColor: v.isTransit ? '#515151' : 'rgb(116 99 57)',
-                opacity: (v.loadedData && v.loadedVideo) ? 1 : 0.5
+                opacity: ((v.isTransit || v.loadedData === 1) && v.loadedVideo === 1) ? 1 : 0.5
               }}>
               <span className="video-name">{v.id}</span>
               {/* {this.renderIndicator()} */}
