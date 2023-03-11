@@ -195,8 +195,8 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   // video control
   play() {
     if (!this.currentTrack || !this.currentTrack.paused) return
-    console.log('play video')
-    this.currentTrack.playbackRate = 0.75
+    console.debug('play video')
+    // this.currentTrack.playbackRate = 0.75
     this.currentTrack.play()
     this.onPlay?.(this.currentTrack?.id as VideoID)
   }
