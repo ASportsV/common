@@ -30,15 +30,6 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
   }
 
   /**
-   * -------------- Game data ----------------
-   */
-  // #playerBins: Partial<Record<PlayerId, PlayerShotBin[]>> = {}
-  // getPlayerBins = (playerId: PlayerId) => this.#playerBins[playerId]
-  // async loadBins() {
-  //   this.#playerBins = await this.worker.getBins();
-  // }
-
-  /**
    * ----------------- Data Loading --------------------
    */
   isLoaded(video: BaseVideo<GameID, VideoID>) {

@@ -1,6 +1,6 @@
 export const DEBUG = {
     OVERLAY: false,
-    COURT: false,
+    COURT: true,
     GAZE: false,
     BBOX: false,
     LINE: false,
