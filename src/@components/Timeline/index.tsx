@@ -45,10 +45,10 @@ export type TimelineProps<GameID extends string, VideoID extends string> = BaseP
 })
 
 // interface xProps {
-  // showEvents: boolean
-  // handlers
-  // onParse: (id: number, rawtext: string, visFunc: (entities: Entity[]) => void) => void
-  // onChangeText?: (id: number, rawtext: string) => void
+// showEvents: boolean
+// handlers
+// onParse: (id: number, rawtext: string, visFunc: (entities: Entity[]) => void) => void
+// onChangeText?: (id: number, rawtext: string) => void
 // }
 
 interface State {
@@ -107,7 +107,9 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
       if (this.#pointer.current) {
         const bbox = this.#pointer.current.getBoundingClientRect()
         if (bbox.left > (window.innerWidth || document.documentElement.clientWidth) || bbox.right < 0) {
-          this.#pointer.current.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+          console.log(bbox, window.innerWidth, document.documentElement.clientWidth)
+          this.#pointer.current.parentElement?.scrollTo({ behavior: 'smooth', left: bbox.left + 400 })
+          // .scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
         }
         // ;(this.#pointer.current as any).scrollIntoViewIfNeeded(true)
       }
@@ -227,7 +229,7 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
     const { clips } = this.props
     const mx = e.clientX
     const drawingInterval = clips.find(int => int.id === isDrawing.intervalId) // 浅复制 指针
-    if(!drawingInterval) return
+    if (!drawingInterval) return
 
     // 更新这个interval的x和width
     let dx = mx - isDrawing.omx // 先获取x方向上的差值
@@ -252,7 +254,7 @@ export class Timeline<GameID extends string, VideoID extends string> extends Rea
     if (e.button !== 0 || isDrawing === null || !this.props.enableClips) return
     const { clips } = this.props
     const drawingIntervalIdx = clips.findIndex(int => int.id === isDrawing.intervalId)
-    if(drawingIntervalIdx === -1) return
+    if (drawingIntervalIdx === -1) return
 
     const drawingInterval = clips[drawingIntervalIdx]
 
