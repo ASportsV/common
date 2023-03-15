@@ -51,9 +51,4 @@ export class VideoEnv<
     await this.dataLoader.fetch(video)
     this.frames = this.dataLoader.getVideoData(video.id)
   }
-
-  // one off data load
-  // async loadBins() {
-  //   return this.dataLoader.loadBins()
-  // }
 }
