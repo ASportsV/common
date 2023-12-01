@@ -12,7 +12,10 @@ import { Database } from "./Database"
 const Loading: Partial<Record<string, boolean>> = {}
 
 // load data from indexedDB
-export async function loadFramesFromDBToMem<GameID extends string, VideoID extends string, PlayerID extends number>(video: BaseVideo<GameID, VideoID>, db: Database<PlayerID>): Promise<CacheFrameData<PlayerID>[] | undefined> {
+export async function loadFramesFromDBToMem<GameID extends string,
+  VideoID extends string,
+  PlayerID extends number>(video: BaseVideo<GameID, VideoID>, db: Database<PlayerID>): Promise<CacheFrameData<PlayerID>[] | undefined> {
+
   const { id: videoId, maxFrame, isTransit = false, startFame = 0 } = video
   if (Loading[videoId] || isTransit) return
   Loading[videoId] = true
@@ -118,75 +121,83 @@ export async function loadRawFramesFromNet<GameID extends string, VideoID extend
 
   const canvas = new OffscreenCanvas(W, H)
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
-  const rawFrames = ArrayToDict(await Promise.all(frameIdxs.map(async (frameIdx) => {
-    const { seg: raw_seg } = frame_data[frameIdx]
-    // @ToDo, hardcode as 0.6
-    postMessage(['Progress', videoId, 0.6 * frameIdx / frameIdxs.length])
-    ctx.clearRect(0, 0, W, H)
-    const imgData = ctx.getImageData(0, 0, W, H)
-    const buf32 = new Uint32Array(imgData.data.buffer);
+  const rawFrames = ArrayToDict(await Promise.all(frameIdxs
+    // .filter(frameIdx => frame_data[frameIdx])
+    .map(async (frameIdx) => {
+      if (!frame_data[frameIdx]) return { mask: undefined, frameIdx }
 
-    const seg = myDecode(raw_seg)
-    let startPad = seg.lz
-    for (let i = 0, len = seg.chunk.length; i < len; ++i) {
-      if (i % 2 === 0) {
-        for (let j = startPad, lenj = startPad + seg.chunk[i]; j < lenj; ++j) {
-          const x = j % W
-          const y = Math.floor(j / W)
-          const pIdx = (y * W + x)
-          // mark as 1, black
-          buf32[pIdx] = 0xff000000;
+      const { seg: raw_seg } = frame_data[frameIdx]
+      // @ToDo, hardcode as 0.6
+      postMessage(['Progress', videoId, 0.6 * frameIdx / frameIdxs.length])
+      ctx.clearRect(0, 0, W, H)
+      const imgData = ctx.getImageData(0, 0, W, H)
+      const buf32 = new Uint32Array(imgData.data.buffer);
+
+      const seg = myDecode(raw_seg)
+      let startPad = seg.lz
+      for (let i = 0, len = seg.chunk.length; i < len; ++i) {
+        if (i % 2 === 0) {
+          for (let j = startPad, lenj = startPad + seg.chunk[i]; j < lenj; ++j) {
+            const x = j % W
+            const y = Math.floor(j / W)
+            const pIdx = (y * W + x)
+            // mark as 1, black
+            buf32[pIdx] = 0xff000000;
+          }
         }
+        startPad += seg.chunk[i]
       }
-      startPad += seg.chunk[i]
-    }
 
-    ctx.putImageData(imgData, 0, 0)
-    // clean
-    delete frame_data[frameIdx].seg
-    return { mask: await canvas.convertToBlob(), frameIdx }
-  })), 'frameIdx')
+      ctx.putImageData(imgData, 0, 0)
+      // clean
+      delete frame_data[frameIdx].seg
+      return { mask: await canvas.convertToBlob(), frameIdx }
+    })), 'frameIdx')
 
   const frameData: Record<number, CacheFrameData<PlayerID>> = {}
-  frameIdxs.forEach(frameIdx => {
+  frameIdxs
+    // .filter(frameIdx => frame_data[frameIdx])
+    .forEach(frameIdx => {
+      const data = frame_data[frameIdx] ?? {}
 
-    // convert player
-    const players: BasePlayer<number>[] = (frame_data[frameIdx].players ?? [])
-      .map((p: any) => {
-        return {
-          ...p,
-          bbox: { x: p.bbox[0], y: p.bbox[1], w: p.bbox[2], h: p.bbox[3] },
-          keypoints: p.keypoints.reduce((o: any, k: any, idx: number) => {
-            o[KEY_POINT_LIST[idx]] = { x: k[0], y: k[1] }
-            return o
-          }, {} as any)
-        }
-      })
+      // convert player
+      const players: BasePlayer<number>[] = (data.players ?? [])
+        .map((p: any) => {
+          return {
+            ...p,
+            bbox: { x: p.bbox[0], y: p.bbox[1], w: p.bbox[2], h: p.bbox[3] },
+            keypoints: p.keypoints.reduce((o: any, k: any, idx: number) => {
+              o[KEY_POINT_LIST[idx]] = { x: k[0], y: k[1] }
+              return o
+            }, {} as any)
+          }
+        })
 
-    // convert ball
-    const oBall = frame_data[frameIdx].ball
-    const ball: Ball | null = oBall ? {
-      // @ts-ignore, this is a dirty hack, since typescript does not allow override types, so I have to remove the `player` property from the type definition of Ball, and manually specify it in the app's @type definition
-      playerId: oBall[0],
-      tracking: { x: oBall[1], y: oBall[2], h: oBall[3] },
-      screenPos: { x: oBall[4], y: oBall[5] }
-    } : null
+      // convert ball
+      const oBall = data.ball
+      const ball: Ball | null = oBall ? {
+        // @ts-ignore, this is a dirty hack, since typescript does not allow override types, so I have to remove the `player` property from the type definition of Ball, and manually specify it in the app's @type definition
+        playerId: oBall[0],
+        tracking: { x: oBall[1], y: oBall[2], h: oBall[3] },
+        screenPos: { x: oBall[4], y: oBall[5] }
+      } : null
 
-    frameData[frameIdx] = {
-      ...frame_data[frameIdx],
-      idx: +frameIdx,
-      gameId,
-      videoId,
-      ball,
-      players,
-    }
-  })
+      frameData[frameIdx] = {
+        ...frame_data[frameIdx],
+        idx: +frameIdx,
+        gameId,
+        videoId,
+        ball,
+        players,
+      }
+    })
   console.debug('merging...')
   const frames: CacheFrameData<PlayerID>[] = frameIdxs.map(frameIdx => ({ ...frameData[frameIdx], ...rawFrames[frameIdx] }))
 
   console.debug(`Save ${videoId} to db===>`)
   db.myTables.frames.bulkPut(Object.values(frames))
   db.myTables.videoDataVersions.put({ gameId, videoId, version })
+
   console.debug(`Done save ${videoId} to db<====`)
   return frames
 }

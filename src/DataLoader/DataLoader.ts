@@ -71,7 +71,9 @@ export class DataLoader<GameID extends string, VideoID extends string, PlayerID 
         framesToSave = [
           ...framesToSave,
           ...(await Promise.all(itemsForBatch.map(async (frame) => {
-            const mask = await getImg(URL.createObjectURL(frame.mask!))
+            console.debug('frame.mask', frame.idx, frame.mask)
+
+            const mask = frame.mask ? await getImg(URL.createObjectURL(frame.mask!)) : undefined
             return { ...frame, mask } as any as Frame<PlayerID>
           })))
         ]
