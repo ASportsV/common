@@ -1,7 +1,7 @@
 import { COLORS } from "../@const/draw";
 import { Layer } from "../@types";
 
-function drawRawFrame(layer: Layer, frame: CanvasImageSource, darkenAlpha = 0.1) {
+function drawRawFrame(layer: Layer, frame: CanvasImageSource, darkenAlpha: number = COLORS.BG_MASK_ALPHA) {
     const { width, height } = layer.canvas
     layer.ctx.drawImage(frame, 0, 0, width, height);
 
@@ -10,7 +10,7 @@ function drawRawFrame(layer: Layer, frame: CanvasImageSource, darkenAlpha = 0.1)
     }
 }
 
-function drawOverlay(layer: Layer, alpha: number = COLORS.BG_MASK_ALPHA) {
+function drawOverlay(layer: Layer, alpha: number) {
     const { ctx, canvas } = layer
     const { width, height } = canvas
 

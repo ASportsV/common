@@ -2,13 +2,15 @@ import { Point } from "../@types"
 
 export const arr2Point = (arr: [number, number]): Point => ({ x: arr[0], y: arr[1] })
 
-export const distPoints = (p1: Point, p2: Point) => {
+export const distPoints = (p1: Point, p2: Point) => distPointsScaleY(p1, p2, 1)
+export const distPointsScaleY = (p1: Point, p2: Point, scaleY = 1) => {
 
     const dx = p1.x - p2.x
     const dy = p1.y - p2.y
 
-    return Math.sqrt(dx * dx + dy * dy)
+    return Math.sqrt(dx * dx + scaleY * dy * dy)
 }
+
 
 export const diffPoints = (p1: Point, p2: Point) => ({ x: p1.x - p2.x, y: p1.y - p2.y })
 export const addPoints = (p1: Point, p2: Point) => ({ x: p1.x + p2.x, y: p1.y + p2.y })

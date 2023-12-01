@@ -4,7 +4,11 @@ import { VideoLoader } from './VideoLoader'
 class VideoTrack<GameID extends string, VideoID extends string> {
   private get frameOffset() {
     // hardcode value, I dont know why
-    return this.#videoMeta?.frameRate === 50 ? 0 : 1
+    return this.#videoMeta?.frameRate === 50 
+      ? 0 
+      : this.#videoMeta?.frameRate! > 50 
+        ? -1 
+        : 1
   }
 
   #videoMeta?: BaseVideo<GameID, VideoID>
@@ -43,6 +47,7 @@ class VideoTrack<GameID extends string, VideoID extends string> {
   constructor(public readonly name: string, private readonly videoPlayer: VideoPlayer<GameID, VideoID>) { }
 
   play() {
+    if(!this.#video) return
     this.#video?.play()
   }
 
@@ -196,7 +201,6 @@ export class VideoPlayer<GameID extends string, VideoID extends string> {
   play() {
     if (!this.currentTrack || !this.currentTrack.paused) return
     console.debug('play video')
-    // this.currentTrack.playbackRate = 0.75
     this.currentTrack.play()
     this.onPlay?.(this.currentTrack?.id as VideoID)
   }
